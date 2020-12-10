@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/submenu"
+        android:title="@string/submenu"
+        android:icon="@drawable/submenu_icon"
+        app:showAsAction="ifRoom">
+
+        <menu>
+            <item android:id="@+id/settings"
+                android:title="@string/settings"
+                android:icon="@drawable/settings"
+                app:showAsAction="always"/>
+
+            <item android:id="@+id/last_log"
+                android:title="@string/last_log"
+                android:icon="@drawable/last_log"
+                app:showAsAction="ifRoom"/>
+
+            <item android:id="@+id/exit"
+                android:title="@string/exit"
+                app:showAsAction="always"
+                android:icon="@drawable/exit"/>
+        </menu>
+    </item>
+</menu>
