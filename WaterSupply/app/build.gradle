@@ -1,15 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
-}
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+}
 
 android {
     compileSdkVersion 29
     buildToolsVersion "30.0.2"
+
+    buildFeatures {
+        viewBinding true
+    }
+
+
 
     defaultConfig {
         applicationId "com.example.watersupply"
@@ -27,6 +30,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -46,4 +50,5 @@ dependencies {
     testImplementation 'junit:junit:4.13.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    implementation 'androidx.preference:preference-ktx:1.1.1'
 }

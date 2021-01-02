@@ -18,6 +18,11 @@
                 android:icon="@drawable/last_log"
                 app:showAsAction="ifRoom"/>
 
+            <item android:id="@+id/app_info"
+                android:title="@string/app_info"
+                android:icon="@drawable/app_info"
+                app:showAsAction="ifRoom"/>
+
             <item android:id="@+id/exit"
                 android:title="@string/exit"
                 app:showAsAction="always"

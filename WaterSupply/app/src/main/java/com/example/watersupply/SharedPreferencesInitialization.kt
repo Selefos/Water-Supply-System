@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.widget.EditText
 import android.widget.SeekBar
 import android.widget.Switch
-import kotlin.properties.Delegates
 
 /**
  * Created by Andreas on 11/17/2020.
@@ -51,11 +50,11 @@ class SharedPreferencesInitialization {
   //region TIMER SEEK_BAR PREFERENCES
  var spTimerSeekBarPrefs : String = "timer_seekBar"
  lateinit var timerSeekBar : SeekBar
- var timerSeekBarValueInput : Long = 0
+ var timerSeekBarValueInput : Int = 0
  var timerSeekBarView : Long = 0
 
  var spTimerSeekBarState : String = "timer_seek_bar_state"
- var timerSeekBarValueOutput : Long = 0
+ var timerSeekBarValueOutput :Int = 0
 
  //endregion
 
