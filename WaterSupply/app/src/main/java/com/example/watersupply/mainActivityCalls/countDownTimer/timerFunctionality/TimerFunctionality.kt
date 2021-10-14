@@ -2,7 +2,6 @@ package com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctional
 
 
 import android.os.CountDownTimer
-import com.example.watersupply.SharedPreferencesInitialization
 
 
 /**
@@ -10,11 +9,10 @@ import com.example.watersupply.SharedPreferencesInitialization
  */
 class TimerFunctionality {
 
+    private val sharedPreferencesInitialization =
+        com.example.watersupply.SharedPreferencesInitialization()
 
-    private val sharedPreferencesInitialization = SharedPreferencesInitialization()
-
-
-    var convertedTimerCountToHours: Long = sharedPreferencesInitialization.timerSeekBarValueOutput * 3600
+    var convertedTimerCountToHours: Long = (sharedPreferencesInitialization.timerSeekBarValueOutput * 3600).toLong()
     var detectTimeChange : Long = 0L
 
     var secondsRemaining = convertedTimerCountToHours
@@ -22,6 +20,4 @@ class TimerFunctionality {
 
     var timerState = TimerState.Paused
     lateinit var countDownTimer: CountDownTimer
-
-
 }

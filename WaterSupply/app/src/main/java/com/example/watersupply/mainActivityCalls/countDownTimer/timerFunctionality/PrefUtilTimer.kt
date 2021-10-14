@@ -1,26 +1,19 @@
 package com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality
 
 import  android.content.Context
-import android.preference.PreferenceManager
-
+import androidx.preference.PreferenceManager
 
 /**
  * Created by Andreas on 11/21/2020.
  */
 
-class PrefUtil {
-
+class PrefUtilTimer {
 
     var stPreviousTimeChoice : String = "previousTimeStoring"
     var stPreTime : String = "preTime"
-    var storePreviousTime : Long = 0
+    //var storePreviousTime : Long = 0
 
     companion object{
-
-        fun getTimerLength(context: Context): Long {
-            //placeholder
-            return 0
-        }
 
         private const val PREVIOUS_TIMER_LENGTH_SECONDS_ID = "com.waterSupply.timer.previous_timer_length"
 

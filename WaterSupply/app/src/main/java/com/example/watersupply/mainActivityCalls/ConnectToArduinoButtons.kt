@@ -1,189 +1,198 @@
 package com.example.watersupply.mainActivityCalls
 
 import android.graphics.Color
+import android.os.SystemClock
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import android.widget.Toast
 import androidx.core.view.isVisible
-import com.example.watersupply.mainActivityCalls.chronometerTimer.startChronometer
-import com.example.watersupply.mainActivityCalls.chronometerTimer.stopChronometer
+import com.example.watersupply.mainActivityCalls.chronometerTimer.*
 import com.example.watersupply.mainActivityCalls.countDownTimer.processTimerUI.onTimerStartAnimation
 import com.example.watersupply.mainActivityCalls.countDownTimer.processTimerUI.onTimerStopAnimation
 import com.example.watersupply.mainActivityCalls.countDownTimer.processTimerUI.startTimer
+import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerRunOnBackground.Companion.loadPrefsEstimatedClockStopTime
+import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerRunOnBackground.Companion.savePrefsEstimatedClockStopTimeOnMainActivity
 import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerState
-import kotlinx.android.synthetic.main.activity_main.*
 
 /**
  * Created by Andreas on 11/27/2020.
  */
 
-            /*---- BUTTON FINITE ----*/
+                    /*---- BUTTON TIMER ----*/
 
-//change the button views accordingly when timer -> ON
-fun MainActivity.buttonTimerOnFinite() {
+    //change the button views accordingly when timer -> ON
+    fun MainActivity.buttonTimerOnFinite() {
 
-    button_timerOn_finite.isVisible = true
+        binding.buttonTimerOnFinite.isVisible = true
 
-    button_timerOn_finite.setOnClickListener{
+        binding.buttonTimerOnFinite.setOnClickListener{
 
-        val text = "Connection to Arduino\nInitiated"
-        val spannableString = SpannableString(text)
-        val txtColor = ForegroundColorSpan(Color.RED)
-        spannableString.setSpan(txtColor, 22,text.length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
-        val toast = Toast.makeText(applicationContext, spannableString, Toast.LENGTH_SHORT)
-        toast.show()
+            //sendSMSInitiateCountdown()
 
+            connectionMessage()
 
-        //init values to cycle through button views when timer -> ON
-        buttonOnFiniteInit()
-
-        timerFunctionality.timerState = TimerState.Running
-        startTimer()
+            binding.clockStopTime.isVisible = true
 
 
-        onTimerStartAnimation()
+            savePrefsEstimatedClockStopTimeOnMainActivity()
+            loadPrefsEstimatedClockStopTime()
 
+            //init values to cycle through button views when timer -> ON
+            buttonTimerOnFiniteInit()
 
-    }
-}
+            arduinoInitiate()
 
-fun MainActivity.buttonTimerOffFinite() {
-
-    button_timerOff_finite.isVisible = true
-
-    button_timerOff_finite.setOnClickListener{
-
-        val text = "Connection to Arduino\nDisconnected"
-        val spannableString = SpannableString(text)
-        val txtColor = ForegroundColorSpan(Color.RED)
-        spannableString.setSpan(txtColor, 22,text.length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
-        val toast = Toast.makeText(applicationContext, spannableString, Toast.LENGTH_SHORT)
-        toast.show()
-
-
-
-        buttonOffFiniteInit()
-
-        onTimerStopAnimation()
-        clock_view.isVisible = false
-        timerFunctionality.countDownTimer.cancel()
-        timerFunctionality.timerState = TimerState.Paused
-
+            //starts the timer
+            timerFunctionality.timerState = TimerState.Running
+            startTimer()
+            onTimerStartAnimation()
+        }
     }
 
-}
+    fun MainActivity.buttonTimerOffFinite() {
 
-//init values to cycle through button views when timer -> ON
-fun MainActivity.instFiniteButtonsAfterResume(){
+        binding.buttonTimerOffFinite.isVisible = true
 
-    if(timerFunctionality.timerState == TimerState.Running && sharedPreferencesInitialization.timerOn)
-        buttonOnFiniteInit()
+        binding.buttonTimerOffFinite.setOnClickListener{
 
+            //sendSMSDeactivateCountdown()
 
-    if(timerFunctionality.timerState == TimerState.Stopped && sharedPreferencesInitialization.timerOn)
-        buttonOffFiniteInit()
+            disconnectionMessage()
 
-}
+            //init values to cycle through button views when timer -> ON
+            buttonTimerOffFiniteInit()
 
-fun MainActivity.buttonOnFiniteInit() {
+            arduinoStop()
 
-    button_timerOn_finite.isVisible = false
-    buttonTimerOffFinite()
-
-}
-
-fun MainActivity.buttonOffFiniteInit() {
-
-    button_timerOff_finite.isVisible = false
-    buttonTimerOnFinite()
-
-}
-
-/*-------------------------------------------------------------*/
-
-                /*---- BUTTON INFINITE ----*/
-
-//change the button views accordingly when timer -> OFF
-fun MainActivity.buttonTimerOnInfinite(){
-
-    button_timerOn_infinite.isVisible = true
-
-    button_timerOn_infinite.setOnClickListener{
-
-        val text = "Connection to Arduino\nInitiated"
-        val spannableString = SpannableString(text)
-        val txtColor = ForegroundColorSpan(Color.RED)
-        spannableString.setSpan(txtColor, 22,text.length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
-        val toast = Toast.makeText(applicationContext, spannableString, Toast.LENGTH_SHORT)
-        toast.show()
-
-        startChronometer()
-        buttonOnInfiniteInit()
-
+            //pauses the timer
+            onTimerStopAnimation()
+            binding.clockView.isVisible = false
+            binding.clockStopTime.isVisible = false
+            timerFunctionality.countDownTimer.cancel()
+            timerFunctionality.timerState = TimerState.Paused
+        }
     }
 
-}
+    //init values to cycle through button views when timer -> ON
+    fun MainActivity.instantiateTimerButtonsAfterResume(){
 
-fun MainActivity.buttonTimerOffInfinite(){
+        if(timerFunctionality.timerState == TimerState.Running && sharedPreferencesInitialization.timerOn)
+            buttonTimerOnFiniteInit()
 
-    button_timerOff_infinite.isVisible =  true
-
-    button_timerOff_infinite.setOnClickListener {
-
-        val text = "Connection to Arduino\nDisconnected"
-        val spannableString = SpannableString(text)
-        val txtColor = ForegroundColorSpan(Color.RED)
-        spannableString.setSpan(txtColor, 22,text.length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
-        val toast = Toast.makeText(applicationContext, spannableString, Toast.LENGTH_SHORT)
-        toast.show()
-
-        stopChronometer()
-        buttonOffInfiniteInit()
-
+        if(timerFunctionality.timerState == TimerState.Stopped && sharedPreferencesInitialization.timerOn)
+            buttonTimerOffFiniteInit()
     }
-}
 
-//init values to cycle through button views when timer -> OFF
-fun MainActivity.instInfiniteButtonsAfterResume(){
-    if(timerFunctionality.timerState == TimerState.Running && !sharedPreferencesInitialization.timerOn)
-        buttonOnInfiniteInit()
+    fun MainActivity.buttonTimerOnFiniteInit() {
 
+        binding.buttonTimerOnFinite.isVisible = false
+        buttonTimerOffFinite()
+    }
 
-    if(timerFunctionality.timerState == TimerState.Stopped && !sharedPreferencesInitialization.timerOn)
-        buttonOffInfiniteInit()
+    fun MainActivity.buttonTimerOffFiniteInit() {
 
-}
-
-fun MainActivity.buttonOnInfiniteInit(){
-
-    button_timerOn_infinite.isVisible = false
-    buttonTimerOffInfinite()
-
-}
-
-fun MainActivity.buttonOffInfiniteInit(){
-
-
-    button_timerOff_infinite.isVisible = false
-    buttonTimerOnInfinite()
-
-}
-
-/*-------------------------------------------------------------*/
-
-//depending if timer selection ON or OFF instantiate the button pairs
-fun MainActivity.instButtonBaseTimerChoice(){
-
-    if(sharedPreferencesInitialization.timerOn)
+        binding.buttonTimerOffFinite.isVisible = false
         buttonTimerOnFinite()
+    }
+
+    /*-------------------------------------------------------------*/
+
+                    /*---- BUTTON CHRONOMETER ----*/
+
+    //change the button views accordingly when timer -> OFF
+    fun MainActivity.buttonChronometerOnInfinite(){
+
+        binding.buttonTimerOnInfinite.isVisible = true
+
+        binding.buttonTimerOnInfinite.setOnClickListener{
+
+            //sendSMSInitiateNoTimer()
+
+            connectionMessage()
+
+            arduinoInitiate()
+
+            getElapsedChronometerTime(SystemClock.elapsedRealtime())
+            //init values to cycle through button views when timer -> OFF
+            buttonChronometerOnInfiniteInit()
+
+            startChronometer()
+        }
+    }
+
+    fun MainActivity.buttonChronometerOffInfinite(){
+
+        binding.buttonTimerOffInfinite.isVisible = true
+
+        binding.buttonTimerOffInfinite.setOnClickListener {
+
+            //sendSMSDeactivateNoTimer()
+
+            disconnectionMessage()
+
+            arduinoStop()
+
+            //init values to cycle through button views when timer -> OFF
+            buttonChronometerOffInfiniteInit()
+
+            stopChronometer()
+        }
+    }
+
+    //init values to cycle through button views when timer -> OFF
+    fun MainActivity.instantiateChronometerButtonsAfterResume(){
+
+        chronometerFunctionality.chronometerState = PrefUtilChronometer.getChronometerState(this)
+
+        if(chronometerFunctionality.chronometerState == ChronometerState.Running && !sharedPreferencesInitialization.timerOn) {
+            buttonChronometerOnInfiniteInit()
+            continueChronometer()
+        }
+
+        if(chronometerFunctionality.chronometerState == ChronometerState.Stopped && !sharedPreferencesInitialization.timerOn)
+            buttonChronometerOffInfiniteInit()
+    }
+
+    fun MainActivity.buttonChronometerOnInfiniteInit(){
+
+        binding.buttonTimerOnInfinite.isVisible = false
+        buttonChronometerOffInfinite()
+    }
+
+    fun MainActivity.buttonChronometerOffInfiniteInit(){
+
+        binding.buttonTimerOffInfinite.isVisible = false
+        buttonChronometerOnInfinite()
+    }
+
+    /*-------------------------------------------------------------*/
+
+    //depending if timer selection ON or OFF instantiate the button pairs
+    fun MainActivity.instButtonBaseTimerChronometerChoice(){
+
+        if(sharedPreferencesInitialization.timerOn)
+            buttonTimerOnFinite()
+
+        if(!sharedPreferencesInitialization.timerOn)
+            buttonChronometerOnInfinite()
+    }
 
 
-    if(!sharedPreferencesInitialization.timerOn)
-        buttonTimerOnInfinite()
+    fun MainActivity.connectionMessage(){
+        val text = "Connection to Arduino\nInitiated"
+        val spannableString = SpannableString(text)
+        val txtColor = ForegroundColorSpan(Color.RED)
+        spannableString.setSpan(txtColor, 22,text.length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+        val toast = Toast.makeText(applicationContext, spannableString, Toast.LENGTH_SHORT)
+        toast.show()
+    }
 
-}
-
-
-
-
+    fun MainActivity.disconnectionMessage(){
+        val text = "Connection to Arduino\nDisconnected"
+        val spannableString = SpannableString(text)
+        val txtColor = ForegroundColorSpan(Color.RED)
+        spannableString.setSpan(txtColor, 22,text.length, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+        val toast = Toast.makeText(applicationContext, spannableString, Toast.LENGTH_SHORT)
+        toast.show()
+    }

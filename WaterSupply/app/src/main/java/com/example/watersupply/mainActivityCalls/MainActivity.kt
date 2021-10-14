@@ -1,72 +1,67 @@
 package com.example.watersupply.mainActivityCalls
 
-import android.app.Activity
+import android.Manifest
 import android.content.Intent
-import android.content.res.Configuration
+import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
+import androidx.annotation.CallSuper
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import com.example.watersupply.R
-import com.example.watersupply.SharedPreferencesInitialization
-import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerRunOnBackground.Companion.currentSeconds
-import com.example.watersupply.mainActivityCalls.chronometerTimer.chronometerInit
+import com.example.watersupply.databinding.ActivityMainBinding
+import com.example.watersupply.mainActivityCalls.chronometerTimer.*
+import com.example.watersupply.mainActivityCalls.countDownTimer.notificationManager.*
 import com.example.watersupply.mainActivityCalls.countDownTimer.processTimerUI.activateTimerAnimation
 import com.example.watersupply.mainActivityCalls.countDownTimer.processTimerUI.initTimer
 import com.example.watersupply.mainActivityCalls.countDownTimer.processTimerUI.storePreviousTime
-import com.example.watersupply.mainActivityCalls.countDownTimer.notificationManager.*
-import com.example.watersupply.mainActivityCalls.countDownTimer.processTimerUI.timerAnimationUp
-import com.example.watersupply.settingsCalls.Settings
-import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.PrefUtil
+import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.PrefUtilTimer
 import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerFunctionality
 import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerRunOnBackground
+import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerRunOnBackground.Companion.currentSeconds
+import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerRunOnBackground.Companion.loadPrefsEstimatedClockStopTime
+import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerRunOnBackground.Companion.timeMessage
 import com.example.watersupply.mainActivityCalls.countDownTimer.timerFunctionality.TimerState
-import kotlinx.android.synthetic.main.activity_main.*
-
+import com.example.watersupply.toolBarOptions.*
 
 /**
  * Created by Andreas on 11/16/2020.
  */
 
-/**
- * TODO Make Regular Timer, buttons on infinite cycle,
- * TODO API for connection to Arduino, send and receive data.
- * */
-
-
-open class MainActivity : AppCompatActivity(){
+class MainActivity : AppCompatActivity(){
 
     //region INSTANTIATE CLASSES
 
-    val sharedPreferencesInitialization = SharedPreferencesInitialization()
+    val sharedPreferencesInitialization = com.example.watersupply.SharedPreferencesInitialization()
     val timerFunctionality = TimerFunctionality()
-    val prefUtil = PrefUtil()
-
+    val chronometerFunctionality = ChronometerFunctionality()
+    val prefUtil = PrefUtilTimer()
     //endregion
 
+    //set views
+    lateinit var binding: ActivityMainBinding
+    private var checkForPermissions = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.e("Main","onCreate")
+        Log.e("Main", "onCreate")
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         functionsCall()
     }
 
     override fun onStart() {
-        Log.e("Main","onStart")
+        Log.e("Main", "onStart")
         super.onStart()
-
-        stopBackgroundNotifications()
+        //stopBackgroundNotifications()
     }
 
     override fun onResume() {
-        Log.e("Main","onResume")
+        Log.e("Main", "onResume")
         super.onResume()
 
         storePreviousTime()
@@ -75,38 +70,46 @@ open class MainActivity : AppCompatActivity(){
 
         activateTimerAnimation()
 
+        instantiateTimerButtonsAfterResume()
+        instantiateChronometerButtonsAfterResume()
+
+
         TimerRunOnBackground.removeAlarm(this)
+        ControlBackgroundNotifications.stopBackgroundElapsedNotification(this)
 
-        instFiniteButtonsAfterResume()
-        instInfiniteButtonsAfterResume()
-
-
+        loadPrefsEstimatedClockStopTime()
+        timeMessage()
     }
 
     override fun onPause() {
-        Log.e("Main","onPause")
+        Log.e("Main", "onPause")
         super.onPause()
 
         if(timerFunctionality.timerState == TimerState.Running) {
             timerFunctionality.countDownTimer.cancel()
+
             //runs on background
-            val wakeUpTimer = TimerRunOnBackground.setAlarm(this, currentSeconds, timerFunctionality.secondsRemaining)
+            TimerRunOnBackground.setAlarm(this, currentSeconds, timerFunctionality.secondsRemaining)
+            ControlBackgroundNotifications.startBackgroundElapsedNotification(this, currentSeconds, timerFunctionality.secondsRemaining)
         }
 
-        PrefUtil.setPreviousTimerLengthSeconds(timerFunctionality.timerLengthSeconds, this)
-        PrefUtil.setSecondsRemaining(timerFunctionality.secondsRemaining, this)
-        PrefUtil.setTimerState(timerFunctionality.timerState, this)
-
+        PrefUtilTimer.setPreviousTimerLengthSeconds(timerFunctionality.timerLengthSeconds, this)
+        PrefUtilTimer.setSecondsRemaining(timerFunctionality.secondsRemaining, this)
+        PrefUtilTimer.setTimerState(timerFunctionality.timerState, this)
+        PrefUtilChronometer.setChronometerState(chronometerFunctionality.chronometerState, this)
     }
 
     override fun onStop() {
-        Log.e("Main","onStop")
+        Log.e("Main", "onStop")
         super.onStop()
+
+        saveLastLogDetails()
         startBackgroundNotifications()
     }
 
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        Log.e("Main", "onCreateOptionsMenu")
 
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main_activity_menu, menu)
@@ -114,62 +117,108 @@ open class MainActivity : AppCompatActivity(){
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        Log.e("Main", "onOptionsItemSelected")
 
-        // Handle action bar item clicks here.
+        //set menu item and deem them clickable
         when (item.itemId) {
             R.id.settings -> settingsTransition()
-            R.id.last_log -> Toast.makeText(this, "Last Log", Toast.LENGTH_LONG).show()
-            R.id.exit -> exitApp()
+            R.id.last_log -> lastLog(this)
+            R.id.app_info -> appInfo(this)
+            R.id.exit -> exitDialog()
         }
 
         return super.onOptionsItemSelected(item)
     }
 
-    private fun toolBarInit() {
-        setSupportActionBar(toolbar as Toolbar?)
-    }
-
-
     override fun onBackPressed() {
-       exitApp()
+        exitDialog()
     }
 
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray){
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        fun innerCheck() {
+            checkForPermissions =
+                !(grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED)
+            onPermissionButtons()
+        }
+
+        when(requestCode){
+            SMS_SEND -> innerCheck()
+            SMS_RECEIVE -> innerCheck()
+        }
+    }
+
+    @CallSuper
+    override fun onActivityResult(requestCode : Int, resultCode: Int, data: Intent?){
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == BATTERY_RESTRICTIONS)
+            checkForBatteryOptimization()
+    }
 
     private fun functionsCall() {
 
+
+        loadDarkModePrefs()
+        stopBackgroundNotifications()
+        loadTimerSeekBarPrefs()
+        loadTimerPrefs()
+        loadLastLogDetails()
+        //loadInfoDisplayDialogPreferences()
+
         createNotificationChannel()
+        createElapsedNotificationChannel()
 
         toolBarInit()
 
-
-        loadDarkModePrefs()
-
-        loadTimerPrefs()
-
-        loadTimerSeekBarPrefs()
-
-
-        instButtonBaseTimerChoice()
-
+        instButtonBaseTimerChronometerChoice()
 
         chronometerInit()
 
+        checkForPermission(Manifest.permission.SEND_SMS, smsSend, SMS_SEND)
+        checkForPermission(Manifest.permission.RECEIVE_SMS, smsReceive, SMS_RECEIVE)
+        checkForBatteryOptimization()
     }
 
-    private fun settingsTransition() {
 
-        val intent = Intent(this@MainActivity, Settings::class.java)
-        startActivity(intent)
-        this.finish()
+    private fun onPermissionButtons(){
+        if(!checkForPermissions){
+            binding.buttonTimerOnInfinite.isEnabled = false
+            binding.buttonTimerOnFinite.isEnabled = false
+        } else{
+            binding.buttonTimerOnInfinite.isEnabled = true
+            binding.buttonTimerOnFinite.isEnabled = true
+        }
+    }
+
+    private fun waterSupplyIsOpenReminder(){
+
+        AlertDialog.Builder(this)
+            .setMessage("Watter supply is open. Please remember to open the app and close it, if you choose to leave now.")
+            .setCancelable(true)
+            .setPositiveButton("Close Watter Supply"){_, _ -> buttonChronometerOffInfiniteInit()
+                stopChronometer()}
+            .setNegativeButton("Exit") { _, _ -> finish() }
+            .create()
+            .show()
+    }
+
+    private fun exitDialog(){
+        if(chronometerFunctionality.chronometerState == ChronometerState.Running)
+            waterSupplyIsOpenReminder()
+        else
+            exitApp()
+
     }
 
     private fun exitApp(){
+
         AlertDialog.Builder(this)
-                .setMessage("Are you sure you want to exit?")
-                .setCancelable(true)
-                .setPositiveButton("Yes") { _, _ -> finish() }
-                .setNegativeButton("No") { dialog, _ -> dialog.cancel() }
-                .create()
-                .show()
+            .setMessage("Are you sure you want to exit?")
+            .setCancelable(true)
+            .setPositiveButton("Yes") { _, _ -> finish() }
+            .setNegativeButton("No") { dialog, _ -> dialog.cancel() }
+            .create()
+            .show()
     }
 }
